@@ -1,5 +1,7 @@
 import sys
 import random
+import pygame
+from pygame.locals import *
 
 
 def check():
@@ -45,56 +47,69 @@ def wincheck(board):
 def robo_input():
 	global board
 	ip = random.randint(1,9)
-	while board[ip] != '-':
+	while board[ip-1] != '-':
 		ip = random.randint(1,9)
 	board[ip] = 'O'
 	return
 
-def get_input(is_x):
-	if not is_x:
-		robo_input()
-		return
+def get_input(is_x,pos):
+	
 	global board
 	turn = 'X' if is_x else 'O'
 	print('It\'s',turn,'turn')
-
-	inp = input()
-	if inp == 'e':
-		sys.exit()
-	try:
-		z = int(inp) - 1
-		while board[z] != '-':
-			print('hey you cant conquer other\'s land')
-			get_input(is_x)
-			return
-		board[z] = 'X' if is_x else 'O'
-	except:
-		print('enter valid index')
-		get_input(is_x)
+	x, y = pygame.mouse.get_pos() 
+	x = x // 100
+	y = y // 100
+	inp = (y * 3 + x + 1)
+	z = int(inp) - 1
+	board[z] = 'X' if is_x else 'O'
 	return
+
 
 def print_board(board):
-	print('')
-	print(''.join(board[:3]))
-	print(''.join(board[3:6]))
-	print(''.join(board[6:]))
-	print('')
+	global screen
+	global xtext
+	global otext
+	pygame.draw.line(screen,(0,0,0),(100,0),(100,300),7)
+	pygame.draw.line(screen,(0,0,0),(200,0),(200,300),7)
+	pygame.draw.line(screen,(0,0,0),(0,100),(300,100),7)
+	pygame.draw.line(screen,(0,0,0),(0,200),(300,200),7)
+	for i in range(len(board)):
+		if board[i] == 'X':
+			screen.blit(xtext,((i) % 3 * 100 + 25,(i) // 3 * 100 + 25))
+		elif board[i] == 'O':
+			screen.blit(otext,((i) % 3 * 100 + 25,(i) // 3 * 100 + 25))
+	pygame.display.update()
 	return
+
+
+pygame.init()
+screen = pygame.display.set_mode((300,300))
+screen.fill((250,250,255))
+pygame.font.init()
+text = pygame.font.SysFont('Comic Sans MS', 30)
+xtext = text.render('X',False,(0,0,0))
+otext = text.render('O',False,(0,0,0))
+x = text.render('X',True,(0,0,0))
 
 board = ['-','-','-','-','-','-','-','-','-']
 is_x = True
 scores = {}
 scores['X'] = 0
 scores['O'] = 0
-print('No of players?')
-n = int(input())
-if n is not in [1,2]:
-	print('Not valid')
-	sys.exit()
+clock = pygame.time.Clock()
+
 print_board(board)
 
 while(True):
-	get_input(is_x)
-	print_board(board)
-	check()
-	is_x ^= 1
+	for event in pygame.event.get(): 
+		if event.type == QUIT: 
+			pygame.quit() 
+			sys.exit()
+		if event.type == pygame.MOUSEBUTTONDOWN:
+			is_x ^= 1
+			get_input(is_x,pygame.mouse.get_pos())
+			print_board(board)
+			check()
+	pygame.display.update()
+	clock.tick(10)
